@@ -38,7 +38,7 @@ class ServerMonitorApp(QMainWindow):
 
     def init_ui(self):
         self.setWindowTitle("Robot Controller")
-        self.setGeometry(50, 50, 1800, 950)
+        self.setGeometry(50, 50, 1150, 600)
 
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
@@ -52,12 +52,10 @@ class ServerMonitorApp(QMainWindow):
 
         server_port_label = QLabel(f"Server Port:                   {self.server_port}")
         server_port_label.setFont(QFont('Arial', 30))
-        server_port_label.move(0, 100)
         layout.addWidget(server_port_label)
 
         self.clients_label = QLabel(f"Connected Clients:         {self.ClientCount}")
         self.clients_label.setFont(QFont('Arial', 30))
-        self.clients_label.move(0, 100)
         layout.addWidget(self.clients_label)
 
         # Create a QSplitter to split the client list
@@ -75,9 +73,17 @@ class ServerMonitorApp(QMainWindow):
         buttons_main = QHBoxLayout()
         layout.addLayout(buttons_main)
 
+        server_action_buttons = QHBoxLayout()
+        buttons_main.addLayout(server_action_buttons)
+
         self.start_button = QPushButton("Start Server")
+
         self.start_button.clicked.connect(self.start_server)
-        buttons_main.addWidget(self.start_button)
+        server_action_buttons.addWidget(self.start_button)
+
+        self.stop_button = QPushButton("Stop Server")
+        self.stop_button.clicked.connect(self.stop_server)
+        server_action_buttons.addWidget(self.stop_button)
 
         list_action_buttons = QHBoxLayout()
         buttons_main.addLayout(list_action_buttons)
@@ -92,12 +98,26 @@ class ServerMonitorApp(QMainWindow):
         list_action_buttons.addWidget(self.save_list)
 
         central_widget.setLayout(layout)
+        # self.showMaximized()
+        self.showFullScreen()
 
     def start_server(self):
         self.server_running = True
         self.server_thread = threading.Thread(target=self.run_server)
         self.server_thread.daemon = True
         self.server_thread.start()
+
+    def show_stop_message_box(self):
+        msg_box = QMessageBox()
+        msg_box.setIcon(QMessageBox.Information)
+        msg_box.setWindowTitle("Server Stopped")
+        msg_box.setText("Server stopped! Thank You")
+        msg_box.exec_()
+
+    def stop_server(self):
+        self.show_stop_message_box()
+        # time.sleep(2)
+        QApplication.quit()
 
     def ClearList(self):
         self.received_messages_list.clear()
