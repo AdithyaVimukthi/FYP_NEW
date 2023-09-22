@@ -4,6 +4,7 @@ import pickle
 import struct
 import imutils
 
+
 def get_ip_address():
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -14,6 +15,7 @@ def get_ip_address():
     except Exception as e:
         return "Error: " + str(e)
 
+
 def gstreamer_pipeline(
         camera_id,
         capture_width=1920,
@@ -22,7 +24,7 @@ def gstreamer_pipeline(
         display_height=480,
         framerate=30,
         flip_method=0,
-    ):
+):
     return (
             "nvarguscamerasrc sensor-id=%d ! "
             "video/x-raw(memory:NVMM), "
@@ -33,18 +35,19 @@ def gstreamer_pipeline(
             "videoconvert ! "
             "video/x-raw, format=(string)BGR ! appsink max-buffers=1 drop=True"
             % (
-                    camera_id,
-                    capture_width,
-                    capture_height,
-                    framerate,
-                    flip_method,
-                    display_width,
-                    display_height,
+                camera_id,
+                capture_width,
+                capture_height,
+                framerate,
+                flip_method,
+                display_width,
+                display_height,
             )
     )
 
+
 class VideoServer():
-    def __init__(self,port_num):
+    def __init__(self, port_num):
         # Socket Create
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.host_ip = get_ip_address()
@@ -59,8 +62,9 @@ class VideoServer():
             client_socket, addr = self.server_socket.accept()
             print('GOT CONNECTION FROM:', addr)
             if client_socket:
-                vid = cv2.VideoCapture(gstreamer_pipeline(camera_id=0, flip_method=2), cv2.CAP_GSTREAMER) #for raspberry cam
-                #vid = cv2.VideoCapture(0)   #for webcam
+                vid = cv2.VideoCapture(gstreamer_pipeline(camera_id=0, flip_method=2),
+                                       cv2.CAP_GSTREAMER)  # for raspberry cam
+                # vid = cv2.VideoCapture(0)   #for webcam
 
                 while vid.isOpened():
                     img, frame = vid.read()
@@ -71,11 +75,12 @@ class VideoServer():
                     client_socket.sendall(message)
 
                     cv2.imshow('TRANSMITTING VIDEO', frame)
-                    
+
                     if cv2.waitKey(1) & 0xFF == ord('q'):
                         client_socket.close()
                         vid.relase()
                         cv2.destroyAllWindows()
+
 
 if __name__ == "__main__":
     server = VideoServer(8000)  # Replace with your server IP and port
