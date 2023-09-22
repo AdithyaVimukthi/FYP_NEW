@@ -4,10 +4,12 @@ import cv2
 import pickle
 import struct
 
+import imutils
+
 # create socket
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-host_ip = '192.168.1.2'  # paste your server ip address here
-port = 9999
+host_ip = '192.168.1.3'  # paste your server ip address here
+port = 8000
 client_socket.connect((host_ip, port))  # a tuple
 data = b""
 payload_size = struct.calcsize("Q")
@@ -25,6 +27,7 @@ while True:
     frame_data = data[:msg_size]
     data = data[msg_size:]
     frame = pickle.loads(frame_data)
+    frame = imutils.resize(frame, width=640)
     cv2.imshow("RECEIVING VIDEO", frame)
     key = cv2.waitKey(1) & 0xFF
     if key == ord('q'):
