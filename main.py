@@ -4,7 +4,7 @@ from TCP_CLIENT import Client
 from sending_data_cal import Data_process
 
 if __name__ == '__main__':
-    client = Client("192.168.1.8", 8000)  # Replace with the server's IP and port
+    client = Client("192.168.1.3", 8000)  # Replace with the server's IP and port
     video = Video()
     data_process = Data_process()
 
