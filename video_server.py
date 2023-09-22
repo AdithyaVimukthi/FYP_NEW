@@ -30,8 +30,9 @@ while True:
     if client_socket:
         vid = cv2.VideoCapture(0)
 
-        while (vid.isOpened()):
+        while vid.isOpened():
             img, frame = vid.read()
+            print(frame.shape)
             frame = imutils.resize(frame, width=320)
             a = pickle.dumps(frame)
             message = struct.pack("Q", len(a)) + a
