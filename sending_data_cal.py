@@ -27,7 +27,13 @@ class Data_process:
         self.gripper_state = None
         self.Rotation = None
 
-    def Proces(self, landmark_data):
+        self.width = None
+        self.height = None
+
+    def Proces(self, landmark_data, size_data):
+
+        self.width = size_data[0]
+        self.height = size_data[1]
 
         self.shoulder_L = [landmark_data[0][0], landmark_data[0][1]]
         self.shoulder_R = [landmark_data[1][0], landmark_data[1][1]]
@@ -38,10 +44,9 @@ class Data_process:
         self.mft = landmark_data[4]
         self.distance_calibration_data = landmark_data[5]
 
-        # print(f"shoulder_L_vis - [{self.shoulder_L_vis}]  ||| shoulder_R_vis - [{self.shoulder_R_vis}]")
-
         R_x = self.shoulder_R[0] - self.wrist[0]
         R_y = self.shoulder_R[1] - self.wrist[1]
+
         self.end_eff_pos = [R_x, R_y]
 
         if self.mft != "None" and self.wrist != "None":
@@ -52,12 +57,37 @@ class Data_process:
             elif dist_mft_wrist < 70:
                 self.gripper_state = 1  # gripper closed
         else:
-            self.gripper_state = "None"
+            self.gripper_state = 999
 
         if type(self.distance_calibration_data) != str:
             self.Rotation = self.rotation_mapping()
+        else:
+            self.Rotation = 999
 
-        return tuple([self.end_eff_pos, self.gripper_state, self.Rotation])
+        drawing_data = self.draw_data()
+        msg_str = f"{self.end_eff_pos[0]},{self.end_eff_pos[1]},{self.gripper_state},{self.Rotation}"
+        return tuple([msg_str, drawing_data])
+
+    def draw_data(self):
+        m1 = 0
+        m2 = 250
+        border = 50
+
+        x1 = int(self.shoulder_R[0] - m1 - m2)
+        y1 = int(self.shoulder_R[1] - (self.height - 2 * border) / 2)
+        x2 = int(self.shoulder_R[0] - m1)
+        y2 = int(self.shoulder_R[1] + (self.height - 2 * border) / 2)
+
+        if x1 < 0:
+            x1 = 0
+        if y1 < 0:
+            y1 = 0
+        if y2 > self.height:
+            y2 = self.height
+
+        rec_data = [x1, y1, x2, y2]
+
+        return tuple([rec_data, self.shoulder_R, self.wrist])
 
     def rotation_mapping(self):
         val1 = 0
@@ -72,7 +102,7 @@ class Data_process:
 
         dist_thumbcmc_pinkymcp = round(calculate_dis(self.distance_calibration_data[0], self.distance_calibration_data[1], "dtp"))
 
-        if self.gripper_state == 0 or self.gripper_state == "None":  # gripper open
+        if self.gripper_state == 0 or self.gripper_state == 999:  # gripper open
             if dist_thumbcmc_pinkymcp < 30:
                 dist_thumbcmc_pinkymcp = 30
             elif dist_thumbcmc_pinkymcp > 100:

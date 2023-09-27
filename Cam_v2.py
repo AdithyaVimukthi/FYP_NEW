@@ -16,6 +16,8 @@ def calculate_dis(a, b):
 
 class Video:
     def __init__(self):
+        self.image = None
+        self.landmark_data = None
         self.mp_drawing = mp.solutions.drawing_utils
         self.mp_drawing_styles = mp.solutions.drawing_styles
         self.mp_pose = mp.solutions.holistic
@@ -69,44 +71,52 @@ class Video:
                 return tuple([shoulder_L, shoulder_R, elbow, wrist, mft, dis_cal_data])
 
     def video_analyzer(self):
+        success, self.image = self.cap.read()
 
-        # while self.cap.isOpened():
-        success, image = self.cap.read()
-        cpy_org_image = image
+        cpy_org_image = self.image
         fps = int(self.cap.get(cv2.CAP_PROP_FPS))
 
         if not success:
             print("Ignoring empty camera frame.")
-            # If loading a video, use 'break' instead of 'continue'.
-            # continue
 
-        landmark_data = self.landmark_extractor(cpy_org_image)
+        self.landmark_data = self.landmark_extractor(cpy_org_image)
 
-        if len(landmark_data) == 1 and landmark_data[0] == "None":
-            return tuple([image, "None"])
-        else:
-            shoulder_R = [landmark_data[1][0], landmark_data[1][1]]
-            wrist = landmark_data[3]
+        # if len(self.landmark_data) == 1 and self.landmark_data[0] == "None":
+        #     return tuple([image, "None"])
+        # else:
+        #     shoulder_R = [self.landmark_data[1][0], self.landmark_data[1][1]]
+        #     wrist = self.landmark_data[3]
 
-            R_x = shoulder_R[0] - wrist[0]
-            R_y = shoulder_R[1] - wrist[1]
+        return tuple([self.image, self.landmark_data, [self.width, self.height]])
 
-            # Draw the arrowed line passing the arguments
-            image2 = cv2.arrowedLine(image, (shoulder_R[0] + 80, shoulder_R[1]),
-                                     (shoulder_R[0] - 150, shoulder_R[1]),
-                                     (255, 255, 255), 2, 5, 0, 0.1)
-            image2 = cv2.arrowedLine(image2, (shoulder_R[0], shoulder_R[1] + 80),
-                                     (shoulder_R[0], shoulder_R[1] - 150),
-                                     (255, 255, 255), 2, 5, 0, 0.1)
+    def draw_result(self, drawing_data):
+        rec_data = drawing_data[0]
+        shoulder_R = drawing_data[1]
+        wrist = drawing_data[2]
 
-            # Draw a diagonal green line with thickness of 9 px
-            image2 = cv2.line(image2, shoulder_R, wrist, (0, 255, 0), 2)
-            image2 = cv2.putText(image2, f'({R_x},{R_y})',
-                                 (wrist[0] + 20, wrist[1] + 20), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 255, 0), 2,
-                                 cv2.LINE_AA)
+        x1 = int(rec_data[0])
+        y1 = int(rec_data[1])
+        x2 = int(rec_data[2])
+        y2 = int(rec_data[3])
 
-            return tuple([image2, landmark_data])
+        start_point = (x1, y1)
+        end_point = (x2, y2)
+        color = (255, 0, 0)
+        thickness = 2
+
+        image2 = cv2.rectangle(self.image, start_point, end_point, color, thickness)
+
+        image2 = cv2.line(image2, shoulder_R, wrist, (0, 255, 0), 2)
+
+        image2 = cv2.flip(image2, 1)
+
+        return image2
+
 
 # if __name__ == "__main__":
 #     video = Video()
-#     video.landmarks_finder()
+#     while True:
+#         data = video.video_analyzer()
+#         cv2.imshow('MediaPipe Pose', data[0])
+
+
