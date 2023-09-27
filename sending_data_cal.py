@@ -14,6 +14,12 @@ def calculate_dis(a, b, place):
 
 class Data_process:
     def __init__(self):
+        self.border = None
+        self.y2 = None
+        self.y1 = None
+        self.x1 = None
+        self.x2 = None
+
         self.distance_calibration_data = None
         self.shoulder_R_vis = None
         self.shoulder_L_vis = None
@@ -44,8 +50,12 @@ class Data_process:
         self.mft = landmark_data[4]
         self.distance_calibration_data = landmark_data[5]
 
-        R_x = self.shoulder_R[0] - self.wrist[0]
-        R_y = self.shoulder_R[1] - self.wrist[1]
+        drawing_data = self.draw_data()
+
+        R_x = round((self.x2 - self.wrist[0]) / (self.x2 - self.x1), 2)
+
+        # R_x = self.shoulder_R[0] - self.wrist[0]
+        R_y = round((self.shoulder_R[1] - self.wrist[1])/(self.height - 2 * self.border), 2)
 
         self.end_eff_pos = [R_x, R_y]
 
@@ -64,28 +74,27 @@ class Data_process:
         else:
             self.Rotation = 999
 
-        drawing_data = self.draw_data()
         msg_str = f"{self.end_eff_pos[0]},{self.end_eff_pos[1]},{self.gripper_state},{self.Rotation}"
         return tuple([msg_str, drawing_data])
 
     def draw_data(self):
         m1 = 0
         m2 = 250
-        border = 50
+        self.border = 50
 
-        x1 = int(self.shoulder_R[0] - m1 - m2)
-        y1 = int(self.shoulder_R[1] - (self.height - 2 * border) / 2)
-        x2 = int(self.shoulder_R[0] - m1)
-        y2 = int(self.shoulder_R[1] + (self.height - 2 * border) / 2)
+        self.x1 = int(self.shoulder_R[0] - m1 - m2)
+        self.y1 = int(self.shoulder_R[1] - (self.height - 2 * self.border) / 2)
+        self.x2 = int(self.shoulder_R[0] - m1)
+        self.y2 = int(self.shoulder_R[1] + (self.height - 2 * self.border) / 2)
 
-        if x1 < 0:
-            x1 = 0
-        if y1 < 0:
-            y1 = 0
-        if y2 > self.height:
-            y2 = self.height
+        if self.x1 < 0:
+            self.x1 = 0
+        if self.y1 < 0:
+            self.y1 = 0
+        if self.y2 > self.height:
+            self.y2 = self.height
 
-        rec_data = [x1, y1, x2, y2]
+        rec_data = [self.x1, self.y1, self.x2, self.y2]
 
         return tuple([rec_data, self.shoulder_R, self.wrist])
 
