@@ -14,6 +14,10 @@ def calculate_dis(a, b, place):
 
 class Data_process:
     def __init__(self):
+        self.m1 = None
+        self.h_bottom = None
+        self.h_top = None
+        self.w = None
         self.border = None
         self.y2 = None
         self.y1 = None
@@ -52,10 +56,22 @@ class Data_process:
 
         drawing_data = self.draw_data()
 
-        R_x = round((self.x2 - self.wrist[0]) / (self.x2 - self.x1), 2)
+        R_x = round(((self.x2 - self.wrist[0] - self.m1) / self.w), 4)
 
-        # R_x = self.shoulder_R[0] - self.wrist[0]
-        R_y = round((self.shoulder_R[1] - self.wrist[1])/(self.height - 2 * self.border), 2)
+        y_side = self.shoulder_R[1] - self.wrist[1]
+
+        if y_side > 0:
+            R_y = round(((self.shoulder_R[1] - self.wrist[1]) / self.h_top), 4)
+        else:
+            R_y = round(-1*((self.shoulder_R[1] - self.wrist[1]) / self.h_bottom), 4)
+
+        if R_x > 1:
+            R_x = 1
+        elif R_x < 0:
+            R_x = 0
+
+        if R_y > 1:
+            R_y = 1
 
         self.end_eff_pos = [R_x, R_y]
 
@@ -74,18 +90,21 @@ class Data_process:
         else:
             self.Rotation = 999
 
-        msg_str = f"{self.end_eff_pos[0]},{self.end_eff_pos[1]},{self.gripper_state},{self.Rotation}"
+        msg_str = f"T{self.end_eff_pos[0]},{self.end_eff_pos[1]},{self.gripper_state},{self.Rotation}"
         return tuple([msg_str, drawing_data])
 
     def draw_data(self):
-        m1 = 0
-        m2 = 250
+        self.h_top = 200
+        self.h_bottom = 152
+        self.w = 250
+        self.m1 = 0
+
         self.border = 50
 
-        self.x1 = int(self.shoulder_R[0] - m1 - m2)
-        self.y1 = int(self.shoulder_R[1] - (self.height - 2 * self.border) / 2)
-        self.x2 = int(self.shoulder_R[0] - m1)
-        self.y2 = int(self.shoulder_R[1] + (self.height - 2 * self.border) / 2)
+        self.x1 = int(self.shoulder_R[0] - self.m1 - self.w)
+        self.y1 = int(self.shoulder_R[1] - self.h_top)
+        self.x2 = int(self.shoulder_R[0] - self.m1)
+        self.y2 = int(self.shoulder_R[1] + self.h_bottom)
 
         if self.x1 < 0:
             self.x1 = 0
@@ -125,6 +144,6 @@ class Data_process:
             val1 = round((dist_thumbcmc_pinkymcp - close_min_val) / (close_max_val - close_min_val), 3)
 
         rotation_angle = (round((max_rob_angle - min_rob_angle) * val1)) + min_rob_angle
-        print(f"Rotation_angle = {rotation_angle} ----> {dist_thumbcmc_pinkymcp}")
+        # print(f"Rotation_angle = {rotation_angle} ----> {dist_thumbcmc_pinkymcp}")
 
         return rotation_angle
