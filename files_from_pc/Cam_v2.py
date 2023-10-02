@@ -118,5 +118,7 @@ class Video:
 #     while True:
 #         data = video.video_analyzer()
 #         cv2.imshow('MediaPipe Pose', data[0])
-
+#         if cv2.waitKey(5) & 0xFF == ord('q'):
+#             break
+#     cv2.destroyAllWindows()
 

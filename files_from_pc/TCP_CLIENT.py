@@ -1,4 +1,8 @@
 import socket
+import cv2
+import pickle
+import struct
+import imutils
 
 
 class Client:
@@ -6,6 +10,8 @@ class Client:
         self.host = host
         self.port = port
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.data = b""
+        self.payload_size = struct.calcsize("Q")
 
     def connect(self):
         self.client_socket.connect((self.host, self.port))
