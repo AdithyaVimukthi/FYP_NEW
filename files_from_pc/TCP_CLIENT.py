@@ -25,15 +25,41 @@ class Client:
         self.client_socket.close()
         print("Disconnected from server")
 
+    def video_receive(self):
+        while len(self.data) < self.payload_size:
+            packet = self.client_socket.recv(4 * 1024)  # 4K
+            if not packet:
+                break
+            self.data += packet
 
-# if __name__ == "__main__":
-#     client = Client("192.168.1.5", 8005)  # Replace with the server's IP and port
-#     client.connect()
-#
-#     while True:
-#         message = input("Enter a message (type 'quit' to exit): ")
-#         if message.lower() == "quit":
-#             client.disconnect()
-#             break
-#
-#         client.send_message(message)
+        packed_msg_size = self.data[:self.payload_size]
+        self.data = self.data[self.payload_size:]
+        msg_size = struct.unpack("Q", packed_msg_size)[0]
+
+        while len(self.data) < msg_size:
+            self.data += self.client_socket.recv(4 * 1024)
+
+        frame_data = self.data[:msg_size]
+        self.data = self.data[msg_size:]
+        frame = pickle.loads(frame_data)
+
+        return frame
+
+
+if __name__ == "__main__":
+    client = Client("192.168.1.4", 8003)  # Replace with the server's IP and port
+    client.connect()
+
+    while True:
+        message = "Hi"
+        frame = client.video_receive()
+
+        cv2.imshow('TRANSMITTING VIDEO', frame)
+        key = cv2.waitKey(1) & 0xFF
+        if key == ord('q'):
+            message = "quit"
+
+        if message.lower() == "quit":
+            client.disconnect()
+            break
+        client.send_message(message)
