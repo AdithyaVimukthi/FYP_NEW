@@ -48,16 +48,17 @@ class Client:
 
 
 if __name__ == "__main__":
-    client = Client("192.168.1.4", 8003)  # Replace with the server's IP and port
+    client = Client("192.168.1.5", 8007)  # Replace with the server's IP and port
     client.connect()
-
+    
     while True:
         frame = client.video_receive()
-
+        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+        # frame = cv2.flip(frame, 0)
         cv2.imshow('TRANSMITTING VIDEO', frame)
         key = cv2.waitKey(1) & 0xFF
         if key == ord('q'):
             client.disconnect()
             break
 
-        client.send_message("video received")
+        client.send_message("frame received")

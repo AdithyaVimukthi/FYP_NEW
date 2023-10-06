@@ -46,21 +46,21 @@ class Client:
         return frame
 
 
-if __name__ == "__main__":
-    client = Client("192.168.1.4", 8003)  # Replace with the server's IP and port
-    client.connect()
+# if __name__ == "__main__":
+#     client = Client("192.168.1.4", 8003)  # Replace with the server's IP and port
+#     client.connect()
+#
+#     while True:
+#         frame = client.video_receive()
+#         frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
 
-    while True:
-        frame = client.video_receive()
-
-        cv2.imshow('TRANSMITTING VIDEO', frame)
-        key = cv2.waitKey(1) & 0xFF
-        if key == ord('q'):
-            message = "quit"
-
-        if message.lower() == "quit":
-            client.disconnect()
-            break
-        
-        client.send_message(message)
-
+#         cv2.imshow('TRANSMITTING VIDEO', frame)
+#         key = cv2.waitKey(1) & 0xFF
+#         if key == ord('q'):
+#             message = "quit"
+#
+#         if message.lower() == "quit":
+#             client.disconnect()
+#             break
+#
+#         client.send_message(message)

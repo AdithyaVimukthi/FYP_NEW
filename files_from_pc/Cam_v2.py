@@ -89,7 +89,7 @@ class Video:
 
         return tuple([self.image, self.landmark_data, [self.width, self.height]])
 
-    def draw_result(self, drawing_data):
+    def draw_result(self, drawing_data, receiving_frame):
         rec_data = drawing_data[0]
         shoulder_R = drawing_data[1]
         wrist = drawing_data[2]
