@@ -1,3 +1,4 @@
+# TCP_CLIENT.py
 import socket
 import cv2
 import pickle
@@ -56,11 +57,7 @@ if __name__ == "__main__":
         cv2.imshow('TRANSMITTING VIDEO', frame)
         key = cv2.waitKey(1) & 0xFF
         if key == ord('q'):
-            message = "quit"
-
-        if message.lower() == "quit":
             client.disconnect()
             break
-        
-        client.send_message(message)
 
+        client.send_message("video received")
