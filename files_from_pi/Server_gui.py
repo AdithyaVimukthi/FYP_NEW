@@ -80,7 +80,7 @@ class ServerMonitorApp(QMainWindow):
 
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_webcam_feed)
-        self.timer.start(10)  # Update every 10 milliseconds
+        self.timer.start(1)  # Update every 10 milliseconds
 
         list_leable_splitter = QSplitter()
         layout.addWidget(list_leable_splitter)
