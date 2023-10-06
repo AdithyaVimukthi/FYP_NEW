@@ -1,48 +1,89 @@
-import cv2
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
-import sys
 import socket
-import numpy as np
+import cv2
+import pickle
+import struct
+import imutils
+import tkinter as tk
+from tkinter import simpledialog
 
-class VideoWindow(QWidget):
-    def __init__(self):
-        super().__init__()
+class Client:
+    def __init__(self, host, port):
+        self.host = host
+        self.port = port
+        self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.data = b""
+        self.payload_size = struct.calcsize("Q")
 
-        # Set up socket connection
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.connect(("192.168.1.4", 8003))  # replace with your server address and port
+    def connect(self):
+        self.client_socket.connect((self.host, self.port))
+        print(f"Connected to server {self.host}:{self.port}")
 
-        self.timer_camera = QTimer()
-        self.timer_camera.timeout.connect(self.show_camera)
-        self.timer_camera.start(10)
+    def send_message(self, message):
+        self.client_socket.send(message.encode())
 
-        self.layout = QVBoxLayout()
-        self.label_camera = QLabel()
-        self.layout.addWidget(self.label_camera)
-        self.setLayout(self.layout)
+    def disconnect(self):
+        self.client_socket.send("disconnect".encode())
+        self.client_socket.close()
+        print("Disconnected from server")
 
-    def show_camera(self):
-        # Receive data from the socket
-        data = b''
-        while True:
-            packet = self.sock.recv(4096)
-            if not packet: break
-            data += packet
+    def video_receive(self):
+        while len(self.data) < self.payload_size:
+            packet = self.client_socket.recv(4 * 1024)  # 4K
+            if not packet:
+                break
+            self.data += packet
 
-        # Convert the data to an image
-        nparr = np.frombuffer(data, np.uint8)
-        frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        packed_msg_size = self.data[:self.payload_size]
+        self.data = self.data[self.payload_size:]
+        msg_size = struct.unpack("Q", packed_msg_size)[0]
 
-        if frame is not None:
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            image = QImage(frame.data, frame.shape[1], frame.shape[0], QImage.Format_RGB888)
-            self.label_camera.setPixmap(QPixmap.fromImage(image))
+        while len(self.data) < msg_size:
+            self.data += self.client_socket.recv(4 * 1024)
 
+        frame_data = self.data[:msg_size]
+        self.data = self.data[msg_size:]
+        frame = pickle.loads(frame_data)
 
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    window = VideoWindow()
-    window.show()
-    sys.exit(app.exec_())
+        return frame
+
+class LoginDialog(simpledialog.Dialog):
+    def body(self, master):
+        tk.Label(master, text="Server IP:").grid(row=0)
+        tk.Label(master, text="Server Port:").grid(row=1)
+
+        self.e1 = tk.Entry(master)
+        self.e2 = tk.Entry(master)
+
+        self.e1.grid(row=0, column=1)
+        self.e2.grid(row=1, column=1)
+        return self.e1  # initial focus
+
+    def apply(self):
+        self.server_ip = self.e1.get()
+        self.server_port = int(self.e2.get())
+
+if __name__ == "__main__":
+    ROOT = tk.Tk()
+    ROOT.withdraw()
+    # The input dialog
+    login = LoginDialog(ROOT)
+    SERVER_IP = login.server_ip
+    SERVER_PORT = login.server_port
+
+    client = Client(SERVER_IP, SERVER_PORT)
+    client.connect()
+
+    while True:
+        frame = client.video_receive()
+        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+
+        cv2.imshow('TRANSMITTING VIDEO', frame)
+        key = cv2.waitKey(1) & 0xFF
+        if key == ord('q'):
+            message = "quit"
+
+        if message.lower() == "quit":
+            client.disconnect()
+            break
+
+        client.send_message(message)
