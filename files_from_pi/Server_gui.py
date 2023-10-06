@@ -3,7 +3,9 @@ import socket
 import threading
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
+from PyQt5.QtCore import *
 from servo import servo_controller
+from camera import camera
 
 def get_ip_address():
     try:
@@ -20,6 +22,7 @@ class ServerMonitorApp(QMainWindow):
     def __init__(self):
         super().__init__()
         self.servo = servo_controller()
+        self.cam = camera()
 
         self.clients_label = None
         self.save_list = None
@@ -47,8 +50,11 @@ class ServerMonitorApp(QMainWindow):
 
         layout = QVBoxLayout()
 
+        ipdata_and_cam = QHBoxLayout()
+        layout.addLayout(ipdata_and_cam)
+
         data_main = QVBoxLayout()
-        layout.addLayout(data_main)
+        ipdata_and_cam.addLayout(data_main)
 
         ip_address = get_ip_address()
         ip_label = QLabel(f"Your IP Address:          {ip_address}")
@@ -63,22 +69,71 @@ class ServerMonitorApp(QMainWindow):
         self.clients_label.setFont(QFont('Arial', 30))
         data_main.addWidget(self.clients_label)
 
+        self.cam_label = QLabel()
+        self.cam_label.setAlignment(Qt.AlignRight)
+        ipdata_and_cam.addWidget(self.cam_label)
+
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.update_webcam_feed)
+        self.timer.start(10)  # Update every 10 milliseconds
+
+        list_leable_splitter = QSplitter()
+        layout.addWidget(list_leable_splitter)
+
+        self.cd_label = QLabel("Clients details") 
+        self.cd_label.setFont(QFont('Arial', 15))
+        self.cd_label.setMaximumHeight(20)
+        self.cd_label.setMinimumWidth(100)
+        self.cd_label.setAlignment(Qt.AlignCenter)
+        list_leable_splitter.addWidget(self.cd_label)
+
+        self.res_m_label = QLabel("Resiving massage") 
+        self.res_m_label.setFont(QFont('Arial', 15))
+        self.res_m_label.setMaximumHeight(20)
+        self.res_m_label.setMinimumWidth(50)
+        self.res_m_label.setAlignment(Qt.AlignCenter)
+        list_leable_splitter.addWidget(self.res_m_label)
+
+        self.R_M_label = QLabel("R_M") 
+        self.R_M_label.setFont(QFont('Arial', 15))
+        self.res_m_label.setMaximumHeight(20)
+        list_leable_splitter.addWidget(self.R_M_label)
+
+        self.L_M_label = QLabel("L_M") 
+        self.L_M_label.setFont(QFont('Arial', 15))
+        self.L_M_label.setMaximumHeight(20)
+        list_leable_splitter.addWidget(self.L_M_label)
+
+        self.Grip_label = QLabel("Grip") 
+        self.Grip_label.setFont(QFont('Arial', 15))
+        self.Grip_label.setMaximumHeight(20)
+        list_leable_splitter.addWidget(self.Grip_label)
+
         # Create a QSplitter to split the client list
         splitter = QSplitter()
         layout.addWidget(splitter)
 
         self.client_listbox = QListWidget()
+        self.client_listbox.setMinimumWidth(400)
         splitter.addWidget(self.client_listbox)
 
         # Create a QListWidget for received messages
         self.received_messages_list = QListWidget()
-        # self.received_messages_list.scrollToBottom()
+        self.received_messages_list.setMinimumWidth(400)
         splitter.addWidget(self.received_messages_list)
 
+        motor_data_splitter = QSplitter()
+        splitter.addWidget(motor_data_splitter)
+        
         # Create a QListWidget for display motor angles
-        self.angle_list = QListWidget()
-        # self.angle_list.scrollToBottom()
-        splitter.addWidget(self.angle_list)
+        self.mr_angle_list = QListWidget()
+        motor_data_splitter.addWidget(self.mr_angle_list)
+
+        self.ml_angle_list = QListWidget()
+        motor_data_splitter.addWidget(self.ml_angle_list)
+
+        self.gripper_state_list = QListWidget()
+        motor_data_splitter.addWidget(self.gripper_state_list)
 
         buttons_main = QHBoxLayout()
         layout.addLayout(buttons_main)
@@ -111,6 +166,17 @@ class ServerMonitorApp(QMainWindow):
         # self.showMaximized()
         self.showFullScreen()
 
+    def update_webcam_feed(self):
+        frame = self.cam.capture()
+        
+        # Convert the frame to a QImage
+        height, width, channel = frame.shape
+        bytes_per_line = 3 * width
+        q_img = QImage(frame.data, width, height, bytes_per_line, QImage.Format_RGB888)
+
+        # Display the webcam feed in the QLabel
+        self.cam_label.setPixmap(QPixmap.fromImage(q_img))
+    
     def start_server(self):
         self.server_running = True
         self.server_thread = threading.Thread(target=self.run_server)
@@ -131,7 +197,9 @@ class ServerMonitorApp(QMainWindow):
 
     def ClearList(self):
         self.received_messages_list.clear()
-        self.angle_list.clear()
+        self.mr_angle_list.clear()
+        self.ml_angle_list.clear()
+        self.gripper_state_list.clear()
 
     def SaveList(self):
         # Open a file dialog to choose the save location
@@ -200,8 +268,12 @@ class ServerMonitorApp(QMainWindow):
 
                 mot_ang_msg = self.servo.controll(data_dec)
 
-                self.angle_list.addItem(f"{mot_ang_msg}")
-                self.angle_list.scrollToBottom()
+                self.mr_angle_list.addItem(mot_ang_msg[1])
+                self.mr_angle_list.scrollToBottom()
+                self.ml_angle_list.addItem(mot_ang_msg[2])
+                self.ml_angle_list.scrollToBottom()
+                self.gripper_state_list.addItem(mot_ang_msg[0])
+                self.gripper_state_list.scrollToBottom()
 
                 # Process received data here if needed
             except Exception as e:

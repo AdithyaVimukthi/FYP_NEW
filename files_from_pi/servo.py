@@ -11,6 +11,8 @@ class servo_controller():
         self.LM = self.kit.servo[14]        # elbow - wrist link  max 80
         self.base = self.kit.servo[15]      # max 90
 
+        self.error_correction_factor = 2/3
+
         #setting servos to init positions
         self.gripper.angle = 0
         self.RM.angle = 0
@@ -71,10 +73,10 @@ class servo_controller():
         if gripper_st != 999:
             if gripper_st != self.cur_grip_st :
                 if gripper_st == 0:
-                    self.gripper.angle = 180
+                    self.gripper.angle = 120 * self.error_correction_factor
                     self.cur_grip_st = 1
                 elif gripper_st == 1:
-                    self.gripper.angle = 0
+                    self.gripper.angle = 0 * self.error_correction_factor
                     self.cur_grip_st =  0
         
         self.M_angle_data = self.data_process.process(end_effector_pos)
@@ -87,13 +89,13 @@ class servo_controller():
         if self.curt_RM_ang < self.M_angle_data[0]:
             if R_ang_diff > 5:
                 for i in range (R_ang_diff):
-                    self.RM.angle = self.curt_RM_ang + i
+                    self.RM.angle = (self.curt_RM_ang + i) * self.error_correction_factor
                     time.sleep(10/1000)
                 self.curt_RM_ang = self.M_angle_data[0]
         elif self.curt_RM_ang > self.M_angle_data[0]:
             if R_ang_diff > 5:
                 for i in range (R_ang_diff):
-                    self.RM.angle = self.curt_RM_ang - i
+                    self.RM.angle = (self.curt_RM_ang - i) * self.error_correction_factor
                     time.sleep(10/1000)
                 self.curt_RM_ang = self.M_angle_data[0]
 
@@ -101,14 +103,14 @@ class servo_controller():
         if self.curt_LM_ang < self.M_angle_data[1]:
             if L_ang_diff > 5:
                 for i in range (L_ang_diff):
-                    self.LM.angle = self.curt_LM_ang + i
+                    self.LM.angle = (self.curt_LM_ang + i) * self.error_correction_factor
                     time.sleep(10/1000)
                 self.curt_LM_ang = self.M_angle_data[1]
 
         elif self.curt_LM_ang > self.M_angle_data[1]:
             if L_ang_diff > 5:
                 for i in range (L_ang_diff):
-                    self.LM.angle = self.curt_LM_ang - i
+                    self.LM.angle = (self.curt_LM_ang - i) * self.error_correction_factor
                     time.sleep(10/1000)
                 self.curt_LM_ang = self.M_angle_data[1]
 
@@ -121,20 +123,22 @@ class servo_controller():
 
         return [grip_msg, str(self.M_angle_data[0]), str(self.M_angle_data[1])]
         
+####################################
+kit = ServoKit(channels=16)
 
-# kit = ServoKit(channels=16)
+motor = kit.servo[15]
 
-# motor = kit.servo[15]
+ang = 120
 
-# max_ang = 120
+max_ang = int(round((ang/2)*3))
 
-# for x in range(5):
-#     for i in range (max_ang):
-#         motor.angle = i
-#         time.sleep(15/1000)
+for x in range(5):
+    for i in range (max_ang):
+        motor.angle = i
+        time.sleep(15/1000)
 
-#     for i in range(max_ang):
-#         motor.angle = max_ang - i 
-#         time.sleep(15/1000)
+    for i in range(max_ang):
+        motor.angle = max_ang - i 
+        time.sleep(15/1000)
 
-# motor.angle = 60
+# motor.angle = (max_ang/2)*3
