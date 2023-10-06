@@ -22,7 +22,7 @@ while True:
     if client_socket:
         vid = cv2.VideoCapture(0)
 
-        while (vid.isOpened()):
+        while vid.isOpened():
             img, frame = vid.read()
             frame = imutils.resize(frame, width=320)
             a = pickle.dumps(frame)
