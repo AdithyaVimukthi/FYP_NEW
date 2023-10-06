@@ -39,7 +39,7 @@ class ServerMonitorApp(QMainWindow):
         self.server_socket = None
         self.ClientCount = 0
 
-        self.server_port = 8000
+        self.server_port = 8001
         self.client_messages = []
         self.server_running = False
         self.disconnect_msg = 'disconnect'

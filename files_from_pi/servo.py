@@ -70,75 +70,85 @@ class servo_controller():
         gripper_st = int(data_array[2])
         # rot_len = int(data_array[3])
 
-        if gripper_st != 999:
-            if gripper_st != self.cur_grip_st :
-                if gripper_st == 0:
-                    self.gripper.angle = 120 * self.error_correction_factor
-                    self.cur_grip_st = 1
-                elif gripper_st == 1:
-                    self.gripper.angle = 0 * self.error_correction_factor
-                    self.cur_grip_st =  0
+        # if gripper_st != 999:
+        if gripper_st != self.cur_grip_st :
+            if gripper_st == 0:
+                self.gripper.angle = 120 * self.error_correction_factor
+                self.cur_grip_st = 0
+            elif gripper_st == 1:
+                self.gripper.angle = 0 * self.error_correction_factor
+                self.cur_grip_st =  1
         
-        self.M_angle_data = self.data_process.process(end_effector_pos)
-        print(f"RM_angle = {self.M_angle_data[0]} || LM_angle = {self.M_angle_data[1]}")
-        
-        R_ang_diff = abs(self.curt_RM_ang - self.M_angle_data[0])
-        L_ang_diff = abs(self.curt_LM_ang - self.M_angle_data[1])
-
-        # Right Motor (shoulder - elbow)
-        if self.curt_RM_ang < self.M_angle_data[0]:
-            if R_ang_diff > 5:
-                for i in range (R_ang_diff):
-                    self.RM.angle = (self.curt_RM_ang + i) * self.error_correction_factor
-                    time.sleep(10/1000)
-                self.curt_RM_ang = self.M_angle_data[0]
-        elif self.curt_RM_ang > self.M_angle_data[0]:
-            if R_ang_diff > 5:
-                for i in range (R_ang_diff):
-                    self.RM.angle = (self.curt_RM_ang - i) * self.error_correction_factor
-                    time.sleep(10/1000)
-                self.curt_RM_ang = self.M_angle_data[0]
-
-        #Left Motor (elbow - wrist)
-        if self.curt_LM_ang < self.M_angle_data[1]:
-            if L_ang_diff > 5:
-                for i in range (L_ang_diff):
-                    self.LM.angle = (self.curt_LM_ang + i) * self.error_correction_factor
-                    time.sleep(10/1000)
-                self.curt_LM_ang = self.M_angle_data[1]
-
-        elif self.curt_LM_ang > self.M_angle_data[1]:
-            if L_ang_diff > 5:
-                for i in range (L_ang_diff):
-                    self.LM.angle = (self.curt_LM_ang - i) * self.error_correction_factor
-                    time.sleep(10/1000)
-                self.curt_LM_ang = self.M_angle_data[1]
-
         if gripper_st == 0:
             grip_msg = "Open"
         elif gripper_st == 1: 
             grip_msg = "Close"
         else:
             grip_msg = "Close"
+        
+        self.M_angle_data = self.data_process.process(end_effector_pos)
+        self.RM.angle = self.M_angle_data[0] * self.error_correction_factor
+        self.curt_RM_ang = self.M_angle_data[0]
+        self.LM.angle = self.M_angle_data[1] * self.error_correction_factor
+        self.curt_LM_ang = self.M_angle_data[1]
+
+        # print(f"RM_angle = {self.M_angle_data[0]} || LM_angle = {self.M_angle_data[1]}")
+        
+        # R_ang_diff = abs(self.curt_RM_ang - self.M_angle_data[0])
+        # L_ang_diff = abs(self.curt_LM_ang - self.M_angle_data[1])
+
+        # # Right Motor (shoulder - elbow)
+        # if self.curt_RM_ang < self.M_angle_data[0]:
+        #     if R_ang_diff > 5:
+        #         for i in range (R_ang_diff):
+        #             self.RM.angle = (self.curt_RM_ang + i) * self.error_correction_factor
+        #             time.sleep(10/1000)
+        #         self.curt_RM_ang = self.M_angle_data[0]
+        # elif self.curt_RM_ang > self.M_angle_data[0]:
+        #     if R_ang_diff > 5:
+        #         for i in range (R_ang_diff):
+        #             self.RM.angle = (self.curt_RM_ang - i) * self.error_correction_factor
+        #             time.sleep(10/1000)
+        #         self.curt_RM_ang = self.M_angle_data[0]
+
+        # #Left Motor (elbow - wrist)
+        # if self.curt_LM_ang < self.M_angle_data[1]:
+        #     if L_ang_diff > 5:
+        #         for i in range (L_ang_diff):
+        #             self.LM.angle = (self.curt_LM_ang + i) * self.error_correction_factor
+        #             time.sleep(10/1000)
+        #         self.curt_LM_ang = self.M_angle_data[1]
+
+        # elif self.curt_LM_ang > self.M_angle_data[1]:
+        #     if L_ang_diff > 5:
+        #         for i in range (L_ang_diff):
+        #             self.LM.angle = (self.curt_LM_ang - i) * self.error_correction_factor
+        #             time.sleep(10/1000)
+        #         self.curt_LM_ang = self.M_angle_data[1]
 
         return [grip_msg, str(self.M_angle_data[0]), str(self.M_angle_data[1])]
         
 ####################################
-kit = ServoKit(channels=16)
 
-motor = kit.servo[15]
 
-ang = 120
 
-max_ang = int(round((ang/2)*3))
+# kit = ServoKit(channels=16)
 
-for x in range(5):
-    for i in range (max_ang):
-        motor.angle = i
-        time.sleep(15/1000)
+# motor = kit.servo[14]
 
-    for i in range(max_ang):
-        motor.angle = max_ang - i 
-        time.sleep(15/1000)
+# ang = 90
 
-# motor.angle = (max_ang/2)*3
+# max_ang = int(round((ang/2)*3))
+
+# # for x in range(5):
+# # for i in range (max_ang):
+# #     motor.angle = i
+# #     time.sleep(15/1000)
+
+# for i in range(max_ang):
+#     motor.angle = max_ang - i 
+#     time.sleep(15/1000)
+
+# # motor.angle = (max_ang/2)*3
+
+# # motor.angle = 0
