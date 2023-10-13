@@ -7,6 +7,7 @@ import struct
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
+import random
 from servo import servo_controller
 from camera import camera
 
@@ -39,7 +40,11 @@ class ServerMonitorApp(QMainWindow):
         self.server_socket = None
         self.ClientCount = 0
 
-        self.server_port = 8001
+        self.server_port_list = []
+        for i in range(100):
+            self.server_port_list.append(8000+i) 
+        self.server_port = random.choice(self.server_port_list)
+
         self.client_messages = []
         self.server_running = False
         self.disconnect_msg = 'disconnect'

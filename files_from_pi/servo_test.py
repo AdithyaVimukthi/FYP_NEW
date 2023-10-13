@@ -2,6 +2,7 @@ from adafruit_servokit import ServoKit
 import time
 import math
 import numpy as np
+import threading
 
 x_max = 150
 x_min = 80
@@ -82,9 +83,19 @@ while True:
     R_diff = motor_angles[0] - curnt_angles[0]
     L_diff = motor_angles[1] - curnt_angles[1]
 
-    R_motor_con(curnt_angles[0], R_diff)
+    # creating thread
+    RC = threading.Thread(target=R_motor_con, args=(curnt_angles[0], R_diff))
+    LC = threading.Thread(target=L_motor_con, args=(curnt_angles[1], L_diff))
+ 
+    RC.start()
+    LC.start()
+ 
+    RC.join()
+    LC.join()
 
-    L_motor_con(curnt_angles[1], L_diff)
+    # R_motor_con(curnt_angles[0], R_diff)
+
+    # L_motor_con(curnt_angles[1], L_diff)
 
     curnt_angles[0] = motor_angles[0]
     curnt_angles[1] = motor_angles[1]

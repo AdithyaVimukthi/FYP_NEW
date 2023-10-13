@@ -12,12 +12,15 @@ class servo_controller():
         self.base = self.kit.servo[15]      # max 90
 
         self.error_correction_factor = 2/3
+        self.m_time = 10/1000
 
         #setting servos to init positions
         self.gripper.angle = 0
         self.RM.angle = 0
         self.LM.angle = 0
         self.base.angle = 60
+
+        self.curt_data = [0,0]
 
         self.cur_grip_st = None
         self.grip_init_ang = 0
@@ -26,6 +29,26 @@ class servo_controller():
         self.curt_base_ang = 60
 
         self.data_process = post_process()
+    
+    def R_motor_con(self, cur_ang, diff):
+        if diff > 0 :
+            for i in range (diff):
+                self.RM.angle = cur_ang + i
+                time.sleep(self.m_time)
+        else:
+            for i in range (abs(diff)):
+                self.RM.angle = cur_ang - i
+                time.sleep(self.m_time)
+
+    def L_motor_con(self, cur_ang, diff):
+        if diff > 0 :
+            for i in range (diff):
+                self.LM.angle = cur_ang + i
+                time.sleep(self.m_time)
+        else:
+            for i in range (abs(diff)):
+                self.LM.angle = cur_ang - i
+                time.sleep(self.m_time)
 
     def to_init_pos(self):
         #setting servos to init positions
@@ -33,19 +56,19 @@ class servo_controller():
             self.gripper.angle = 0
             self.cur_grip_st = 0 
 
-        if self.curt_LM_ang != 0:
-            for i in range (self.curt_LM_ang):
-                self.LM.angle = self.curt_LM_ang - i+1
+        if self.curt_data[1] != 0:
+            for i in range (self.curt_data[1]):
+                self.LM.angle = self.curt_data[1] - i+1
                 time.sleep(10/1000)
             self.LM.angle = 0
-            self.curt_LM_ang = 0
+            self.curt_data[1] = 0
         
-        if self.curt_RM_ang != 0:
-            for i in range (self.curt_RM_ang):
-                self.RM.angle = self.curt_RM_ang - i+1
+        if self.curt_data[0] != 0:
+            for i in range (self.curt_data[0]):
+                self.RM.angle = self.curt_data[0] - i+1
                 time.sleep(10/1000)
             self.RM.angle = 0
-            self.curt_RM_ang = 0
+            self.curt_data[0] = 0
 
         if self.curt_base_ang > 60:
             diff = self.curt_base_ang - 60
@@ -87,10 +110,23 @@ class servo_controller():
             grip_msg = "Close"
         
         self.M_angle_data = self.data_process.process(end_effector_pos)
-        self.RM.angle = self.M_angle_data[0] * self.error_correction_factor
-        self.curt_RM_ang = self.M_angle_data[0]
-        self.LM.angle = self.M_angle_data[1] * self.error_correction_factor
-        self.curt_LM_ang = self.M_angle_data[1]
+
+        R_diff = self.M_angle_data[0] - self.curt_data[0]
+        L_diff = self.M_angle_data[1] - self.curt_data[1]
+
+        RC = threading.Thread(target=self.R_motor_con, args=(self.curt_data[0], R_diff))
+        LC = threading.Thread(target=self.L_motor_con, args=(self.curt_data[1], L_diff))
+    
+        RC.start()
+        LC.start()
+    
+        RC.join()
+        LC.join()
+
+        # self.RM.angle = self.M_angle_data[0] * self.error_correction_factor
+        self.curt_data[0] = self.M_angle_data[0]
+        # self.LM.angle = self.M_angle_data[1] * self.error_correction_factor
+        self.curt_data[1] = self.M_angle_data[1]
 
         # print(f"RM_angle = {self.M_angle_data[0]} || LM_angle = {self.M_angle_data[1]}")
         
