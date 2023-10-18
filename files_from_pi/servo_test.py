@@ -1,6 +1,5 @@
 from adafruit_servokit import ServoKit
 import time
-import math
 import numpy as np
 import threading
 
@@ -23,6 +22,9 @@ gripper = kit.servo[12]   # max 90
 RM = kit.servo[13]        # shoulder - elbow link max 80
 LM = kit.servo[14]        # elbow - wrist link  max 80
 base = kit.servo[15]      # max 120
+
+LM.angle = 0
+RM.angle = 0
 
 def R_motor_con(cur_ang, diff):
     if diff > 0 :
@@ -74,28 +76,26 @@ def process(x, y):
 
 while True:
     
-    x = int(input("Enter X Coordinate (80 -> 150): "))
-    y = int(input("Enter Y Coordinate (-38 -> 50): "))
+    x = int(input("Enter X Coordinate (80 -> 125 || 110 -> 125) : "))
+    y = int(input("Enter Y Coordinate (11 -> 75 || 11 -> -25): "))
 
     motor_angles = process(x,y)
 
     print(f"motor_angles --> {motor_angles}")
-    R_diff = motor_angles[0] - curnt_angles[0]
-    L_diff = motor_angles[1] - curnt_angles[1]
+    R_diff = int(round(motor_angles[0]*ecf)) - int(round(curnt_angles[0]*ecf))
+    L_diff = int(round(motor_angles[1]*ecf)) - int(round(curnt_angles[1]*ecf))
 
-    # creating thread
-    RC = threading.Thread(target=R_motor_con, args=(curnt_angles[0], R_diff))
-    LC = threading.Thread(target=L_motor_con, args=(curnt_angles[1], L_diff))
+    # R_motor_con(int(round(curnt_angles[0]*ecf)), R_diff)
+    # L_motor_con(int(round(curnt_angles[1]*ecf)), L_diff)
+
+    RC = threading.Thread(target=R_motor_con, args=(int(round(curnt_angles[0]*ecf)), R_diff))
+    LC = threading.Thread(target=L_motor_con, args=(int(round(curnt_angles[1]*ecf)), L_diff))
  
     RC.start()
     LC.start()
  
     RC.join()
     LC.join()
-
-    # R_motor_con(curnt_angles[0], R_diff)
-
-    # L_motor_con(curnt_angles[1], L_diff)
 
     curnt_angles[0] = motor_angles[0]
     curnt_angles[1] = motor_angles[1]
@@ -106,8 +106,20 @@ while True:
 
     # time.sleep(5)
 
+# LM.angle = 0
+# RM.angle = 0
 
-    # RM.angle = 0
+# while True:
+#     ang = int(input("Enter angle : "))
+#     angle = int(round(ang * ecf))
+#     for i in range (angle):
+#         RM.angle = i
+#         time.sleep(m_time)
+
+#     time.sleep(5)
+#     LM.angle = 0
+#     RM.angle = 0
+
     # LM.angle = 0
 
         # RM_ang = int(input("Enter Right motor angle: "))

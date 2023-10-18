@@ -11,7 +11,7 @@ class servo_controller():
         self.LM = self.kit.servo[14]        # elbow - wrist link  max 80
         self.base = self.kit.servo[15]      # max 90
 
-        self.error_correction_factor = 2/3
+        self.ecf = 3/2
         self.m_time = 10/1000
 
         #setting servos to init positions
@@ -52,9 +52,8 @@ class servo_controller():
 
     def to_init_pos(self):
         #setting servos to init positions
-        if self.cur_grip_st != 0:
-            self.gripper.angle = 0
-            self.cur_grip_st = 0 
+        self.gripper.angle = 0
+        self.cur_grip_st = 0 
 
         if self.curt_data[1] != 0:
             for i in range (self.curt_data[1]):
@@ -93,13 +92,12 @@ class servo_controller():
         gripper_st = int(data_array[2])
         # rot_len = int(data_array[3])
 
-        # if gripper_st != 999:
         if gripper_st != self.cur_grip_st :
             if gripper_st == 0:
-                self.gripper.angle = 120 * self.error_correction_factor
+                self.gripper.angle = 120 * self.ecf
                 self.cur_grip_st = 0
             elif gripper_st == 1:
-                self.gripper.angle = 0 * self.error_correction_factor
+                self.gripper.angle = 0 * self.ecf
                 self.cur_grip_st =  1
         
         if gripper_st == 0:
@@ -111,11 +109,14 @@ class servo_controller():
         
         self.M_angle_data = self.data_process.process(end_effector_pos)
 
-        R_diff = self.M_angle_data[0] - self.curt_data[0]
-        L_diff = self.M_angle_data[1] - self.curt_data[1]
+        # R_diff = self.M_angle_data[0] - self.curt_data[0]
+        # L_diff = self.M_angle_data[1] - self.curt_data[1]
 
-        RC = threading.Thread(target=self.R_motor_con, args=(self.curt_data[0], R_diff))
-        LC = threading.Thread(target=self.L_motor_con, args=(self.curt_data[1], L_diff))
+        R_diff = int(round(self.M_angle_data[0]*self.ecf)) - int(round(self.curt_data[0]*self.ecf))
+        L_diff = int(round(self.M_angle_data[1]*self.ecf)) - int(round(self.curt_data[1]*self.ecf))
+
+        RC = threading.Thread(target=self.R_motor_con, args=(int(round(self.curt_data[0]*self.ecf)), R_diff))
+        LC = threading.Thread(target=self.L_motor_con, args=(int(round(self.curt_data[1]*self.ecf)), L_diff))
     
         RC.start()
         LC.start()

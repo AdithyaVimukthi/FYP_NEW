@@ -1,30 +1,27 @@
-import math
+
 import numpy as np
 
 class post_process():
     def __init__(self):
-        self.xt_max = 140
+        self.xt_max = 125
         self.xt_min = 80
 
-        self.xb_max = 140
-        self.xb_min = 120
+        self.xb_max = 125
+        self.xb_min = 110
 
         self.yt_max = 75
-        self.yt_min = 0
+        self.yt_min = 11
 
-        self.yb_max = 0
-        self.yb_min = -50
+        self.yb_max = 11
+        self.yb_min = -25
 
         self.l1 = 80
         self.l2 = 80
 
-        self.LM_init_ang = 0.52359
-        self.RM_init_ang = 0 
+        q_init_deg = 30
+        self.q_init_rad = q_init_deg * 0.0174533
 
     def process(self,data):
-
-        q_init_deg = 30
-        q_init_rad = q_init_deg * 0.0174533
 
         if data[0] < 0:
             x = ((self.xb_max - self.xb_min) * abs(data[0])) + self.xb_min
@@ -40,7 +37,7 @@ class post_process():
         q2 = np.pi - np.arccos((self.l1**2 + self.l2**2 - x**2 - y**2)/(2*self.l1*self.l2))
         q1 = np.arctan(y/x) + np.arctan((self.l2*np.sin(q2))/(self.l1+self.l2*np.cos(q2)))
         qr = (np.pi/2) - q1
-        ql = np.pi - q2 - q_init_rad - qr
+        ql = np.pi - q2 - self.q_init_rad - qr
 
         RM_angle = round(qr * 57.2958)
         LM_angle = round(ql * 57.2958)
