@@ -23,8 +23,8 @@ RM = kit.servo[13]        # shoulder - elbow link max 80
 LM = kit.servo[14]        # elbow - wrist link  max 80
 base = kit.servo[15]      # max 120
 
-LM.angle = 0
-RM.angle = 0
+# LM.angle = 0
+# RM.angle = 0
 
 def R_motor_con(cur_ang, diff):
     if diff > 0 :
@@ -74,77 +74,57 @@ def process(x, y):
 
         return tuple([RM_angle, LM_angle])
 
-while True:
-    
-    x = int(input("Enter X Coordinate (80 -> 125 || 110 -> 125) : "))
-    y = int(input("Enter Y Coordinate (11 -> 75 || 11 -> -25): "))
-
-    motor_angles = process(x,y)
-
-    print(f"motor_angles --> {motor_angles}")
-    R_diff = int(round(motor_angles[0]*ecf)) - int(round(curnt_angles[0]*ecf))
-    L_diff = int(round(motor_angles[1]*ecf)) - int(round(curnt_angles[1]*ecf))
-
-    # R_motor_con(int(round(curnt_angles[0]*ecf)), R_diff)
-    # L_motor_con(int(round(curnt_angles[1]*ecf)), L_diff)
-
-    RC = threading.Thread(target=R_motor_con, args=(int(round(curnt_angles[0]*ecf)), R_diff))
-    LC = threading.Thread(target=L_motor_con, args=(int(round(curnt_angles[1]*ecf)), L_diff))
- 
-    RC.start()
-    LC.start()
- 
-    RC.join()
-    LC.join()
-
-    curnt_angles[0] = motor_angles[0]
-    curnt_angles[1] = motor_angles[1]
-
-
-    # RM.angle = motor_angles[0] * ecf
-    # LM.angle = motor_angles[1] * ecf
-
-    # time.sleep(5)
-
-# LM.angle = 0
-# RM.angle = 0
-
 # while True:
-#     ang = int(input("Enter angle : "))
-#     angle = int(round(ang * ecf))
-#     for i in range (angle):
+    
+#     x = int(input("Enter X Coordinate (80 -> 125 || 110 -> 125) : "))
+#     y = int(input("Enter Y Coordinate (11 -> 75 || 11 -> -25): "))
+
+#     motor_angles = process(x,y)
+
+#     print(f"motor_angles --> {motor_angles}")
+#     R_diff = int(round(motor_angles[0]*ecf)) - int(round(curnt_angles[0]*ecf))
+#     L_diff = int(round(motor_angles[1]*ecf)) - int(round(curnt_angles[1]*ecf))
+
+#     # R_motor_con(int(round(curnt_angles[0]*ecf)), R_diff)
+#     # L_motor_con(int(round(curnt_angles[1]*ecf)), L_diff)
+
+#     RC = threading.Thread(target=R_motor_con, args=(int(round(curnt_angles[0]*ecf)), R_diff))
+#     LC = threading.Thread(target=L_motor_con, args=(int(round(curnt_angles[1]*ecf)), L_diff))
+ 
+#     RC.start()
+#     LC.start()
+ 
+#     RC.join()
+#     LC.join()
+
+#     curnt_angles[0] = motor_angles[0]
+#     curnt_angles[1] = motor_angles[1]
+
+
+mid_ang = int(round(30 * (3/2)))
+max_ang = int(round(60 * (3/2)))
+
+for x in range(5):
+    for i in range (max_ang):
+        RM.angle = i 
+        time.sleep(m_time)
+    
+    for i in range(max_ang):
+        RM.angle = max_ang - i
+        time.sleep(m_time)
+
+
+# for x in range(5):
+#     for i in range (mid_ang,max_ang):
+#         RM.angle = i 
+#         time.sleep(m_time)
+
+#     for i in range(max_ang):
+#         RM.angle = max_ang - i
+#         time.sleep(m_time)
+
+#     for i in range (mid_ang):
 #         RM.angle = i
 #         time.sleep(m_time)
 
-#     time.sleep(5)
-#     LM.angle = 0
-#     RM.angle = 0
-
-    # LM.angle = 0
-
-        # RM_ang = int(input("Enter Right motor angle: "))
-        # LM_ang = int(input("Enter Left motor angle: "))
-
-        # angle_r = int(round(RM_ang * ecf))
-        # angle_l = int(round(LM_ang * ecf))
-
-        # for i in range (angle_r):
-        #     RM.angle = i
-        #     time.sleep(m_time)
-        
-        # for i in range (angle_l):
-        #     LM.angle = i
-        #     time.sleep(m_time)
-
-        # time.sleep(5)
-
-        # for i in range (angle_r):
-        #     RM.angle = angle_r - i
-        #     time.sleep(m_time)
-        
-        # for i in range (angle_l):
-        #     LM.angle = angle_l - i
-        #     time.sleep(m_time)
-
-
-    
+RM.angle = 0
