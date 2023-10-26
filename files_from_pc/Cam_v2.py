@@ -38,7 +38,7 @@ class Video:
         results = self.holistic.process(image_cap)
 
         if results.pose_landmarks is None:
-            return ["None"]
+            return [0]
             # cv2.imshow('MediaPipe Pose', image)
         else:
             landmark_pose = results.pose_landmarks.landmark
@@ -54,19 +54,18 @@ class Video:
                      round(landmark_pose[self.mp_pose.PoseLandmark.RIGHT_WRIST.value].y * self.height)]
 
             if results.right_hand_landmarks is None:
-                return tuple([shoulder_L, shoulder_R, elbow, wrist, "None", "None"])
-                # cv2.imshow('MediaPipe Pose', image)
+                return tuple([shoulder_L, shoulder_R, elbow, wrist, -999, -999])
             else:
                 landmark_hand = results.right_hand_landmarks.landmark
                 mft = [round(landmark_hand[self.mp_pose.HandLandmark.MIDDLE_FINGER_TIP.value].x * self.width),
                        round(landmark_hand[self.mp_pose.HandLandmark.MIDDLE_FINGER_TIP.value].y * self.height)]
 
-                thumb_cmc = [round(landmark_hand[self.mp_pose.HandLandmark.THUMB_CMC.value].x * self.width),
-                            round(landmark_hand[self.mp_pose.HandLandmark.THUMB_CMC.value].y * self.height)]
-                pinky_cmc = [round(landmark_hand[self.mp_pose.HandLandmark.PINKY_MCP.value].x * self.width),
-                             round(landmark_hand[self.mp_pose.HandLandmark.PINKY_MCP.value].y * self.height)]
+                thumb_tip = [round(landmark_hand[self.mp_pose.HandLandmark.THUMB_TIP.value].x * self.width),
+                             round(landmark_hand[self.mp_pose.HandLandmark.THUMB_TIP.value].y * self.height)]
+                pinky_tip = [round(landmark_hand[self.mp_pose.HandLandmark.PINKY_TIP.value].x * self.width),
+                             round(landmark_hand[self.mp_pose.HandLandmark.PINKY_TIP.value].y * self.height)]
 
-                dis_cal_data = [thumb_cmc, pinky_cmc]
+                dis_cal_data = [thumb_tip, pinky_tip]
 
                 return tuple([shoulder_L, shoulder_R, elbow, wrist, mft, dis_cal_data])
 
@@ -81,15 +80,9 @@ class Video:
 
         self.landmark_data = self.landmark_extractor(cpy_org_image)
 
-        # if len(self.landmark_data) == 1 and self.landmark_data[0] == "None":
-        #     return tuple([image, "None"])
-        # else:
-        #     shoulder_R = [self.landmark_data[1][0], self.landmark_data[1][1]]
-        #     wrist = self.landmark_data[3]
-
         return tuple([self.image, self.landmark_data, [self.width, self.height]])
 
-    def draw_result(self, drawing_data, receiving_frame):
+    def draw_result(self, drawing_data, receiving_frame=None):
         rec_data = drawing_data[0]
         shoulder_R = drawing_data[1]
         wrist = drawing_data[2]
@@ -106,6 +99,9 @@ class Video:
 
         image2 = cv2.rectangle(self.image, start_point, end_point, color, thickness)
 
+        image2 = cv2.circle(image2, start_point, 5, (0, 0, 255), -1)
+        image2 = cv2.circle(image2, end_point, 5, (255, 255, 255), -1)
+
         image2 = cv2.line(image2, shoulder_R, wrist, (0, 255, 0), 2)
 
         image2 = cv2.flip(image2, 1)
@@ -113,12 +109,11 @@ class Video:
         return image2
 
 
-# if __name__ == "__main__":
-#     video = Video()
-#     while True:
-#         data = video.video_analyzer()
-#         cv2.imshow('MediaPipe Pose', data[0])
-#         if cv2.waitKey(5) & 0xFF == ord('q'):
-#             break
-#     cv2.destroyAllWindows()
-
+if __name__ == "__main__":
+    video = Video()
+    while True:
+        data = video.video_analyzer()
+        cv2.imshow('MediaPipe Pose', data[0])
+        if cv2.waitKey(5) & 0xFF == ord('q'):
+            break
+    cv2.destroyAllWindows()
